@@ -1,0 +1,25 @@
+{
+  "name": "lt-apps",
+  "version": "1.0.0",
+  "description": "Landing page for all apps developed by the Learning Technology at University of Wisconsin Extended Campus.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uwex-learning-tech/lt-apps-landing.git"
+  },
+  "author": "Ethan Lin and the University of Wisconsin Extended Campus",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/uwex-learning-tech/lt-apps-landing/issues"
+  },
+  "homepage": "https://github.com/uwex-learning-tech/lt-apps-landing#readme",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "ejs": "^3.1.5",
+    "express": "^4.17.1",
+    "helmet": "^4.2.0"
+  }
+}
