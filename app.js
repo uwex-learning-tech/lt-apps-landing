@@ -7,6 +7,9 @@ const helmet = require( 'helmet' );
 const app = express();
 const port = process.env.PORT || 3000;
 
+// use ejs template engine
+app.set( 'view engine', 'ejs' );
+
 app.listen( port );
 
 // use a middleware to compress response bodies for all requests
@@ -21,7 +24,7 @@ app.use( express.static( 'public' ) );
 
 // ROUTE: ROOT
 app.get( '/', ( req, res ) => {
-    res.render( 'index.ejs' );
+    res.render( 'index.ejs', { title: 'Learning Technology App' } );
 });
 
 // 404 - NO MORE CODE AFTER THIS STATEMENT
