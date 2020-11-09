@@ -18,9 +18,13 @@ app.use( compression() );
 // use a middleware to secure and set HTTP headers
 app.use( helmet() );
 
-// use the "public" directory on the file system to serve static files
-// including "apps"
+// use the "public" directory to serve pulbic static files
+// unrelated to the landing page for "apps"
 app.use( express.static( 'public' ) );
+
+// use the "assets" directory to hold static files related
+// to the landing page (i.e., CSS, JS, images, etc.)
+app.use( express.static( 'assets' ) );
 
 // ROUTE: ROOT
 app.get( '/', ( req, res ) => {
@@ -29,5 +33,5 @@ app.get( '/', ( req, res ) => {
 
 // 404 - NO MORE CODE AFTER THIS STATEMENT
 app.use( ( req, res ) => {
-    res.status( 404 ).render( '404.ejs' );
+    res.status( 404 ).render( '404.ejs', { title: 'Learning Technology App | 404' } );
 } );
