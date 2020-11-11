@@ -24,14 +24,15 @@ app.use( express.static( 'public' ) );
 
 // use the "assets" directory to hold static files related
 // to the landing page (i.e., CSS, JS, images, etc.)
-app.use( express.static( 'assets' ) );
+// with virtual path prefix
+app.use( '/assets', express.static( 'assets' ) );
 
 // ROUTE: ROOT
 app.get( '/', ( req, res ) => {
-    res.render( 'index.ejs', { title: 'Learning Technology App' } );
+    res.render( 'index.ejs', { title: 'Learning Technology Apps | UWEX' } );
 });
 
 // 404 - NO MORE CODE AFTER THIS STATEMENT
 app.use( ( req, res ) => {
-    res.status( 404 ).render( '404.ejs', { title: 'Learning Technology App | 404' } );
+    res.status( 404 ).render( '404.ejs', { title: '404 | Learning Technology Apps | UWEX' } );
 } );
