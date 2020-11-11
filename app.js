@@ -29,10 +29,12 @@ app.use( '/assets', express.static( 'assets' ) );
 
 // ROUTE: ROOT
 app.get( '/', ( req, res ) => {
-    res.render( 'index.ejs', { title: 'Learning Technology Apps | UWEX' } );
+    const host = '//' + req.headers.host;
+    res.render( 'index.ejs', { title: 'Learning Technology Apps | UWEX', root: host } );
 });
 
 // 404 - NO MORE CODE AFTER THIS STATEMENT
 app.use( ( req, res ) => {
-    res.status( 404 ).render( '404.ejs', { title: '404 | Learning Technology Apps | UWEX' } );
+    const host = '//' + req.headers.host;
+    res.status( 404 ).render( '404.ejs', { title: '404 | Learning Technology Apps | UWEX', root: host } );
 } );
