@@ -10,6 +10,8 @@ const port = process.env.PORT || 3000;
 // use ejs template engine
 app.set( 'view engine', 'ejs' );
 
+app.enable( 'trust proxy' );
+
 app.listen( port );
 
 // use a middleware to compress response bodies for all requests
@@ -29,12 +31,12 @@ app.use( '/assets', express.static( 'assets' ) );
 
 // ROUTE: ROOT
 app.get( '/', ( req, res ) => {
-    const host = '//' + req.headers.host;
+    const host = req.protocol + '://' + req.headers.host;
     res.render( 'index.ejs', { title: 'Learning Technology Apps | UWEX', root: host } );
 });
 
 // 404 - NO MORE CODE AFTER THIS STATEMENT
 app.use( ( req, res ) => {
-    const host = '//' + req.headers.host;
+    const host = req.protocol + '://' + req.headers.host;
     res.status( 404 ).render( '404.ejs', { title: '404 | Learning Technology Apps | UWEX', root: host } );
 } );
