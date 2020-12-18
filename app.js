@@ -1,23 +1,26 @@
 // IMPORTS
 const express = require( 'express' );
 const path = require( 'path' );
-const coursePlannerApiV1 = require( './api/course-planner/v1' );
 const compression = require( 'compression' );
 const helmet = require( 'helmet' );
-const bodyParser = require( 'body-parser' );
+const coursePlannerApiV1 = require( './api/course-planner/v1' );
+const courseMatrixDb = require( './api/course-planner/v1/database' );
 
 // EXPRESS APP
 const app = express();
 const port = process.env.PORT || 3000;
 
-// use bodyParser for JSON data
-app.use( bodyParser.urlencoded( { extended: true } ) );
-app.use( bodyParser.json() );
-
 // use ejs template engine
 app.set( 'view engine', 'ejs' );
 app.enable( 'trust proxy' );
 app.listen( port );
+
+// connect to DB
+courseMatrixDb.connect();
+
+// use JSON data
+app.use( express.urlencoded( { extended: true } ) );
+app.use( express.json() );
 
 // use course-planner api routes
 app.use( '/api/course-planner/v1', coursePlannerApiV1 );
@@ -49,8 +52,21 @@ app.get( '/course-planner/*', ( req, res ) => {
     res.sendFile( path.join( __dirname, 'public/course-planner/index.html' ) );
 });
 
-// 404 - NO MORE CODE AFTER THIS STATEMENT
+// 404 - NO MORE ROUTING AFTER THIS STATEMENT
 app.use( ( req, res ) => {
     const host = req.protocol + '://' + req.headers.host;
     res.status( 404 ).render( '404.ejs', { title: '404 | Learning Technology Apps | UWEX', root: host } );
+} );
+
+// server process handlers
+
+process.on( 'unhandledRejection', error => {
+    console.log( error );
+    process.exit( 1 );
+} );
+
+process.on( 'SIGINT', () => {
+    courseMatrixDb.end();
+    app.close();
+    process.exit( 0 );
 } );
