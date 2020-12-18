@@ -109,3 +109,4 @@ dist
 # Public director
 public
 api/course-planner/v1/config.js
+course-planner-credential.json

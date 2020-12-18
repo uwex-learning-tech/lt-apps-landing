@@ -5,10 +5,16 @@ const compression = require( 'compression' );
 const helmet = require( 'helmet' );
 const coursePlannerApiV1 = require( './api/course-planner/v1' );
 const courseMatrixDb = require( './api/course-planner/v1/database' );
+const firebaseAdmin = require( 'firebase-admin' );
+const coursePlannerCredentials = require( './course-planner-credential.json' );
 
 // EXPRESS APP
 const app = express();
 const port = process.env.PORT || 3000;
+
+firebaseAdmin.initializeApp( {
+    credential: firebaseAdmin.credential.cert( coursePlannerCredentials )
+} );
 
 // use ejs template engine
 app.set( 'view engine', 'ejs' );
@@ -30,6 +36,14 @@ app.use( compression() );
 
 // use a middleware to secure and set HTTP headers
 app.use( helmet() );
+app.use( helmet.contentSecurityPolicy( {
+        directives: {
+            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            "default-src": ["'self'", "https://apis.google.com","https://www.googleapis.com","https://course-planner-22915.firebaseapp.com"],
+            "script-src": ["'self'","https://apis.google.com","https://www.googleapis.com","https://course-planner-22915.firebaseapp.com"]
+        }
+    } )
+);
 
 // use the "public" directory to serve pulbic static files
 // unrelated to the landing page for "apps"

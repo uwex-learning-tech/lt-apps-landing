@@ -1,5 +1,6 @@
 const routes = require( 'express' ).Router();
 const db = require( './database' );
+const admin = require( 'firebase-admin' );
 
 /** CAMPUS API ENDPOINTS */
 
@@ -22,7 +23,6 @@ routes.get( '/campuses', async ( req, res ) => {
 routes.get( '/campuses/:id', async ( req, res ) => {
 
     const id = req.params.id;
-
     const { results } = await db.query(
         'SELECT * FROM campus WHERE id=?',
         [id]
@@ -38,6 +38,10 @@ routes.get( '/campuses/:id', async ( req, res ) => {
 
 // create new campus
 routes.post( '/campuses', async ( req, res ) => {
+
+    if (  ! await authenticated( req.headers.authtoken ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} ); 
+    }
 
     if ( req.body.name == null || req.body.name.length == 0 ) {
         return res.status(400).json( {message: "Error: Failed to create new campus."} );
@@ -56,10 +60,16 @@ routes.post( '/campuses', async ( req, res ) => {
 
     return res.json( {name} );
 
+    
+
 } );
 
 // update campus
 routes.post( '/campuses/:id', async ( req, res ) => {
+
+    if (  ! await authenticated( req.headers.authtoken ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} ); 
+    }
 
     if ( req.params == null && req.body.name.length == 0 ) {
         return res.status(400).json( {message: "Error: Failed to update campus."} ); 
@@ -89,6 +99,10 @@ routes.post( '/campuses/:id', async ( req, res ) => {
 // delete campus
 routes.delete( '/campuses/:id', async ( req, res ) => {
 
+    if (  ! await authenticated( req.headers.authtoken ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} ); 
+    }
+    
     const id = req.params.id;
 
     await db.query(
@@ -102,6 +116,39 @@ routes.delete( '/campuses/:id', async ( req, res ) => {
 
 /** END AMPUS API ENDPOINTS */
 
+// list all users
+routes.get( '/users', async ( req, res ) => {
+
+    const { results } = await db.query(
+        'SELECT * FROM user'
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.status(404).json( {message: 'No users exist.'} );
+
+} );
+
+// list one specific user
+routes.get( '/users/:id', async ( req, res ) => {
+
+    const id = req.params.id;
+
+    const { results } = await db.query(
+        'SELECT * FROM user WHERE id=?',
+        [id]
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.status(404).json( {message: `User with id ${id} does not exist.`} );
+
+} );
+
 /** HELPER FUNCTIONS */
 
 async function exists( table, indentifier, value ) {
@@ -112,6 +159,18 @@ async function exists( table, indentifier, value ) {
     );
 
     if ( exists.results.length > 0 ) {
+        return true;
+    }
+
+    return false;
+
+}
+
+async function authenticated( token ) {
+
+    const user = await admin.auth().verifyIdToken( token );
+
+    if ( user ) {
         return true;
     }
 
