@@ -39,7 +39,7 @@ routes.get( '/campuses/:id', async ( req, res ) => {
 // create new campus
 routes.post( '/campuses', async ( req, res ) => {
 
-    if (  ! await authenticated( req.headers.authtoken ) ) {
+    if (  !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} ); 
     }
 
@@ -60,14 +60,12 @@ routes.post( '/campuses', async ( req, res ) => {
 
     return res.json( {name} );
 
-    
-
 } );
 
 // update campus
 routes.post( '/campuses/:id', async ( req, res ) => {
 
-    if (  ! await authenticated( req.headers.authtoken ) ) {
+    if (  !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} ); 
     }
 
@@ -99,10 +97,10 @@ routes.post( '/campuses/:id', async ( req, res ) => {
 // delete campus
 routes.delete( '/campuses/:id', async ( req, res ) => {
 
-    if (  ! await authenticated( req.headers.authtoken ) ) {
+    if (  !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} ); 
     }
-    
+
     const id = req.params.id;
 
     await db.query(
@@ -119,6 +117,10 @@ routes.delete( '/campuses/:id', async ( req, res ) => {
 // list all users
 routes.get( '/users', async ( req, res ) => {
 
+    if (  !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} ); 
+    }
+
     const { results } = await db.query(
         'SELECT * FROM user'
     );
@@ -134,6 +136,10 @@ routes.get( '/users', async ( req, res ) => {
 // list one specific user
 routes.get( '/users/:id', async ( req, res ) => {
 
+    if (  !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} ); 
+    }
+
     const id = req.params.id;
 
     const { results } = await db.query(
@@ -146,6 +152,32 @@ routes.get( '/users/:id', async ( req, res ) => {
     }
 
     return res.status(404).json( {message: `User with id ${id} does not exist.`} );
+
+} );
+
+// create new user
+routes.post( '/users', async ( req, res ) => {
+
+    if ( !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const user = req.body;
+
+    if ( user.length < 0 ) {
+        return res.status(400).json( {message: "Error: Failed to create new user."} );
+    }
+
+    if ( await exists( 'user', 'email', user.email ) ) {
+        return res.json( user );
+    }
+
+    await db.query(
+        'INSERT INTO user (displayName, email, uid) VALUES (?,?,?)',
+        [user.displayName, user.email, user.uid]
+    );
+
+    return res.json( user );
 
 } );
 
@@ -167,6 +199,8 @@ async function exists( table, indentifier, value ) {
 }
 
 async function authenticated( token ) {
+
+    if ( !token ) return false;
 
     const user = await admin.auth().verifyIdToken( token );
 
