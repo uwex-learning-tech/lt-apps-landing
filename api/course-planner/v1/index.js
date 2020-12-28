@@ -2,13 +2,13 @@ const routes = require( 'express' ).Router();
 const db = require( './database' );
 const admin = require( 'firebase-admin' );
 
-/** CAMPUS API ENDPOINTS */
+/** CAMPUSES API ENDPOINTS */
 
 // list all campuses
 routes.get( '/campuses', async ( req, res ) => {
 
     const { results } = await db.query(
-        'SELECT * FROM campus'
+        'SELECT * FROM campus ORDER BY name ASC'
     );
 
     if ( results.length ) {
@@ -29,7 +29,7 @@ routes.get( '/campuses/:id', async ( req, res ) => {
     );
 
     if ( results.length ) {
-        return res.json( results );
+        return res.json( results[0] );
     }
 
     return res.status(404).json( {message: `Campus id ${id} does not exist.`} );
@@ -39,18 +39,18 @@ routes.get( '/campuses/:id', async ( req, res ) => {
 // create new campus
 routes.post( '/campuses', async ( req, res ) => {
 
-    if (  !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
-        return res.status(401).json( {message: `401 Unauthorized`} ); 
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin", "Support Admin"] ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
     if ( req.body.name == null || req.body.name.length == 0 ) {
-        return res.status(400).json( {message: "Error: Failed to create new campus."} );
+        return res.status(400).json( {message: "Failed to create new campus."} );
     }
 
     const name = req.body.name;
 
     if ( await exists( 'campus', 'name', name ) ) {
-        return res.status(400).json( {message: "Error: Cannot update campus. Campus already exists."} );
+        return res.status(400).json( {message: "Cannot add campus. Campus already exists."} );
     }
 
     await db.query(
@@ -65,19 +65,19 @@ routes.post( '/campuses', async ( req, res ) => {
 // update campus
 routes.post( '/campuses/:id', async ( req, res ) => {
 
-    if (  !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
-        return res.status(401).json( {message: `401 Unauthorized`} ); 
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin", "Support Admin"] ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
     if ( req.params == null && req.body.name.length == 0 ) {
-        return res.status(400).json( {message: "Error: Failed to update campus."} ); 
+        return res.status(400).json( {message: "Failed to update campus."} ); 
     }
 
     const id = req.params.id;
     const name = req.body.name;
 
     if ( await exists( 'campus', 'name', name ) ) {
-        return res.status(400).json( {message: "Error: Cannot update campus. Campus already exists."} );
+        return res.status(400).json( {message: "Cannot update campus. Campus already exists."} );
     }
 
     await db.query(
@@ -97,8 +97,8 @@ routes.post( '/campuses/:id', async ( req, res ) => {
 // delete campus
 routes.delete( '/campuses/:id', async ( req, res ) => {
 
-    if (  !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
-        return res.status(401).json( {message: `401 Unauthorized`} ); 
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin", "Support Admin"] ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
     const id = req.params.id;
@@ -112,17 +112,19 @@ routes.delete( '/campuses/:id', async ( req, res ) => {
 
 } );
 
-/** END AMPUS API ENDPOINTS */
+/** END CAMPUSES API ENDPOINTS */
+
+/** USERS API ENDPOINTS */
 
 // list all users
 routes.get( '/users', async ( req, res ) => {
 
-    if (  !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
-        return res.status(401).json( {message: `401 Unauthorized`} ); 
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin"] ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
     const { results } = await db.query(
-        'SELECT * FROM user'
+        'SELECT * FROM user ORDER BY firstName, lastName, displayName ASC'
     );
 
     if ( results.length ) {
@@ -136,19 +138,19 @@ routes.get( '/users', async ( req, res ) => {
 // list one specific user
 routes.get( '/users/:id', async ( req, res ) => {
 
-    if (  !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
-        return res.status(401).json( {message: `401 Unauthorized`} ); 
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin","Support Admin","Program Manager", "Subscriber"] ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
     const id = req.params.id;
 
     const { results } = await db.query(
-        'SELECT * FROM user WHERE id=?',
+        'SELECT * FROM user WHERE uid=?',
         [id]
     );
 
     if ( results.length ) {
-        return res.json( results );
+        return res.json( results[0] );
     }
 
     return res.status(404).json( {message: `User with id ${id} does not exist.`} );
@@ -158,14 +160,14 @@ routes.get( '/users/:id', async ( req, res ) => {
 // create new user
 routes.post( '/users', async ( req, res ) => {
 
-    if ( !req.headers.authtoken && ! await authenticated( req.headers.authtoken ) ) {
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin"] ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
     const user = req.body;
 
     if ( user.length < 0 ) {
-        return res.status(400).json( {message: "Error: Failed to create new user."} );
+        return res.status(400).json( {message: "Failed to create new user."} );
     }
 
     if ( await exists( 'user', 'email', user.email ) ) {
@@ -180,6 +182,73 @@ routes.post( '/users', async ( req, res ) => {
     return res.json( user );
 
 } );
+
+// update user
+routes.post( '/users/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin"] ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+    const user = req.body;
+
+    await db.query(
+        'UPDATE user SET firstName=?, lastName=?, roleId=? WHERE uid=?',
+        [user.firstName, user.lastName, user.roleId, id]
+    );
+
+    const { results } = await db.query(
+        'SELECT * FROM user WHERE uid=?',
+        [id]
+    );
+
+    return res.json( results[0] );
+
+} );
+
+// delete user
+routes.delete( '/users/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin"] ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+
+    await db.query(
+        'DELETE FROM user WHERE id=?',
+        [id]
+    );
+
+    return res.json({ message: 'Delete success' });
+
+} );
+
+/** END USERS API ENDPOINTS */
+
+/** ROLES API ENDPOINTS */
+
+// list all roles
+routes.get( '/roles', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin","Support Admin","Program Manager", "Subscriber"] ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const { results } = await db.query(
+        'SELECT * FROM role'
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.status(404).json( {message: 'No roles exist.'} );
+
+} );
+
+/** END ROLES API ENDPOINTS */
 
 /** HELPER FUNCTIONS */
 
@@ -198,14 +267,25 @@ async function exists( table, indentifier, value ) {
 
 }
 
-async function authenticated( token ) {
+async function roleAllowed( token, allowedRoles ) {
 
     if ( !token ) return false;
 
     const user = await admin.auth().verifyIdToken( token );
 
     if ( user ) {
-        return true;
+
+        const { results } = await db.query(
+            `SELECT user.roleId, role.name
+            FROM user
+            INNER JOIN role ON user.roleId = role.id WHERE user.uid = ? ;`,
+            [user.uid]
+        );
+        
+        if ( allowedRoles.find( role => role.toLowerCase() === results[0].name.toLowerCase() ) ) {
+            return true;
+        }
+
     }
 
     return false;
