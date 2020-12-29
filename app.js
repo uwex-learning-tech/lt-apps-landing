@@ -8,28 +8,37 @@ const courseMatrixDb = require( './api/course-planner/v1/database' );
 const firebaseAdmin = require( 'firebase-admin' );
 const coursePlannerCredentials = require( './course-planner-credential.json' );
 
-// EXPRESS APP
+// constant
+const allowedScripts = [
+    "'self'",
+    "https://apis.google.com",
+    "https://www.googleapis.com",
+    "https://course-planner-22915.firebaseapp.com",
+    "https://lh3.googleusercontent.com",
+    "https://accounts.google.com/",
+    "https://oauth2.googleapis.com"
+];
+
+// EXPRESS APP constants
 const app = express();
 const port = process.env.PORT || 3000;
 
+// initialize Google Firebase
 firebaseAdmin.initializeApp( {
     credential: firebaseAdmin.credential.cert( coursePlannerCredentials )
 } );
+
+// connect to DB
+courseMatrixDb.connect();
 
 // use ejs template engine
 app.set( 'view engine', 'ejs' );
 app.enable( 'trust proxy' );
 app.listen( port );
 
-// connect to DB
-courseMatrixDb.connect();
-
 // use JSON data
 app.use( express.urlencoded( { extended: true } ) );
 app.use( express.json() );
-
-// use course-planner api routes
-app.use( '/api/course-planner/v1', coursePlannerApiV1 );
 
 // use a middleware to compress response bodies for all requests
 app.use( compression() );
@@ -39,8 +48,9 @@ app.use( helmet() );
 app.use( helmet.contentSecurityPolicy( {
         directives: {
             ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-            "default-src": ["'self'", "https://apis.google.com","https://www.googleapis.com","https://course-planner-22915.firebaseapp.com"],
-            "script-src": ["'self'","https://apis.google.com","https://www.googleapis.com","https://course-planner-22915.firebaseapp.com"]
+            "default-src": allowedScripts,
+            "script-src": allowedScripts,
+            "img-src": allowedScripts
         }
     } )
 );
@@ -54,6 +64,9 @@ app.use( express.static( path.join(__dirname, 'public' ) ) );
 // with virtual path prefix
 app.use( '/assets', express.static( 'assets' ) );
 
+// use course-planner api routes
+app.use( '/api/course-planner/v1', coursePlannerApiV1 );
+
 // ROUTE: ROOT
 app.get( '/', ( req, res ) => {
     const host = req.protocol + '://' + req.headers.host;
@@ -62,7 +75,6 @@ app.get( '/', ( req, res ) => {
 
 // ROUTE REWRITE FOR COURSE PLANNER ANGULAR APP
 app.get( '/course-planner/*', ( req, res ) => {
-    console.log(req);
     res.sendFile( path.join( __dirname, 'public/course-planner/index.html' ) );
 });
 
@@ -73,7 +85,6 @@ app.use( ( req, res ) => {
 } );
 
 // server process handlers
-
 process.on( 'unhandledRejection', error => {
     console.log( error );
     process.exit( 1 );
