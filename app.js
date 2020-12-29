@@ -15,8 +15,10 @@ const allowedScripts = [
     "https://www.googleapis.com",
     "https://course-planner-22915.firebaseapp.com",
     "https://lh3.googleusercontent.com",
-    "https://accounts.google.com/",
-    "https://oauth2.googleapis.com"
+    "https://accounts.google.com",
+    "https://oauth2.googleapis.com",
+    "https://securetoken.googleapis.com",
+    "https://fonts.googleapis.com"
 ];
 
 // EXPRESS APP constants
@@ -34,7 +36,7 @@ courseMatrixDb.connect();
 // use ejs template engine
 app.set( 'view engine', 'ejs' );
 app.enable( 'trust proxy' );
-app.listen( port );
+const server = app.listen( port );
 
 // use JSON data
 app.use( express.urlencoded( { extended: true } ) );
@@ -44,7 +46,7 @@ app.use( express.json() );
 app.use( compression() );
 
 // use a middleware to secure and set HTTP headers
-app.use( helmet() );
+// app.use( helmet() );
 app.use( helmet.contentSecurityPolicy( {
         directives: {
             ...helmet.contentSecurityPolicy.getDefaultDirectives(),
@@ -92,6 +94,6 @@ process.on( 'unhandledRejection', error => {
 
 process.on( 'SIGINT', () => {
     courseMatrixDb.end();
-    app.close();
+    server.close();
     process.exit( 0 );
 } );
