@@ -2,6 +2,13 @@ const routes = require( 'express' ).Router();
 const db = require( './database' );
 const admin = require( 'firebase-admin' );
 
+const ROLE = {
+    ADMIN: ["Admin"],
+    SUPPORT_ADMIN: ["Admin", "Support Admin"],
+    PROGRAM_MANAGER: ["Admin", "Support Admin", "Program Manager"],
+    ALL: ["Admin", "Support Admin", "Program Manager", "Subscriber"]
+};
+
 /** CAMPUSES API ENDPOINTS */
 
 // list all campuses
@@ -39,7 +46,7 @@ routes.get( '/campuses/:id', async ( req, res ) => {
 // create new campus
 routes.post( '/campuses', async ( req, res ) => {
 
-    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin", "Support Admin"] ) ) {
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.SUPPORT_ADMIN ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
@@ -65,7 +72,7 @@ routes.post( '/campuses', async ( req, res ) => {
 // update campus
 routes.post( '/campuses/:id', async ( req, res ) => {
 
-    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin", "Support Admin"] ) ) {
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.SUPPORT_ADMIN ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
@@ -97,7 +104,7 @@ routes.post( '/campuses/:id', async ( req, res ) => {
 // delete campus
 routes.delete( '/campuses/:id', async ( req, res ) => {
 
-    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin", "Support Admin"] ) ) {
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.SUPPORT_ADMIN ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
@@ -119,7 +126,7 @@ routes.delete( '/campuses/:id', async ( req, res ) => {
 // list all users
 routes.get( '/users', async ( req, res ) => {
 
-    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin"] ) ) {
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ADMIN ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
@@ -138,7 +145,7 @@ routes.get( '/users', async ( req, res ) => {
 // list one specific user
 routes.get( '/users/:id', async ( req, res ) => {
 
-    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin","Support Admin","Program Manager", "Subscriber"] ) ) {
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ALL ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
@@ -160,7 +167,7 @@ routes.get( '/users/:id', async ( req, res ) => {
 // create new user
 routes.post( '/users', async ( req, res ) => {
 
-    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin"] ) ) {
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ALL ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
@@ -186,7 +193,7 @@ routes.post( '/users', async ( req, res ) => {
 // update user
 routes.post( '/users/:id', async ( req, res ) => {
 
-    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin"] ) ) {
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ADMIN ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
@@ -210,7 +217,7 @@ routes.post( '/users/:id', async ( req, res ) => {
 // delete user
 routes.delete( '/users/:id', async ( req, res ) => {
 
-    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin"] ) ) {
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ADMIN ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
@@ -232,7 +239,7 @@ routes.delete( '/users/:id', async ( req, res ) => {
 // list all roles
 routes.get( '/roles', async ( req, res ) => {
 
-    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ["Admin","Support Admin","Program Manager", "Subscriber"] ) ) {
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ALL ) ) {
         return res.status(401).json( {message: `401 Unauthorized`} );
     }
 
