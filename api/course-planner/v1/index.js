@@ -200,6 +200,10 @@ routes.post( '/users/:id', async ( req, res ) => {
     const id = req.params.id;
     const user = req.body;
 
+    if ( user.length < 0 ) {
+        return res.status(400).json( {message: "Failed to update user."} );
+    }
+
     await db.query(
         'UPDATE user SET firstName=?, lastName=?, roleId=? WHERE uid=?',
         [user.firstName, user.lastName, user.roleId, id]
@@ -256,6 +260,114 @@ routes.get( '/roles', async ( req, res ) => {
 } );
 
 /** END ROLES API ENDPOINTS */
+
+/** FACULTY API ENDPOINTS */
+
+// list all faculty
+routes.get( '/faculty', async ( req, res ) => {
+
+    const { results } = await db.query(
+        'SELECT * FROM faculty ORDER BY firstName, lastName ASC'
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
+// list one specific faculty
+routes.get( '/faculty/:id', async ( req, res ) => {
+
+    const id = req.params.id;
+    const { results } = await db.query(
+        'SELECT * FROM faculty WHERE id=?',
+        [id]
+    );
+
+    if ( results.length ) {
+        return res.json( results[0] );
+    }
+
+    return res.status(404).json( {message: `Faculty id ${id} does not exist.`} );
+
+} );
+
+// create new faculty
+routes.post( '/faculty', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const faculty = req.body;
+
+    if ( faculty.length == 0 ) {
+        return res.status(400).json( {message: "Failed to create new faculty."} );
+    }
+
+    if ( await exists( 'faculty', 'email', faculty.email ) ) {
+        return res.status(400).json( {message: "Cannot add faculty. Faculty already exists."} );
+    }
+
+    await db.query(
+        'INSERT INTO faculty (email, firstName, lastName, campusId) VALUES (?,?,?,?)',
+        [faculty.email, faculty.firstName, faculty.lastName, faculty.campusId]
+    );
+
+    return res.json( faculty );
+
+} );
+
+// update faculty
+routes.post( '/faculty/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+    const faculty = req.body;
+
+    if ( faculty.length == 0 ) {
+        return res.status(400).json( {message: "Failed to update faculty."} ); 
+    }
+
+    await db.query(
+        'UPDATE faculty SET email=?, firstName=?, lastName=?, campusId=? WHERE id=?',
+        [faculty.email, faculty.firstName, faculty.lastName, faculty.campusId, id]
+    );
+
+    const { results } = await db.query(
+        'SELECT * FROM faculty WHERE id=?',
+        [id]
+    );
+
+    return res.json( results[0] );
+
+} );
+
+// delete faculty
+routes.delete( '/faculty/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+
+    await db.query(
+        'DELETE FROM faculty WHERE id=?',
+        [id]
+    );
+
+    return res.json({ message: 'Delete success' });
+
+} );
+
+/** END FACULTY API ENDPOINTS */
 
 /** HELPER FUNCTIONS */
 
