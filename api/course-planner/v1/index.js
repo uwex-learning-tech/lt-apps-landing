@@ -63,7 +63,9 @@ routes.post( '/campuses', async ( req, res ) => {
     await db.query(
         'INSERT INTO campus (name) VALUES (?)',
         [name]
-    );
+    ).then( (r) => {
+        return res.json(r.results.insertId);
+    } );;
 
     return res.json( {name} );
 
@@ -184,7 +186,9 @@ routes.post( '/users', async ( req, res ) => {
     await db.query(
         'INSERT INTO user (displayName, email, uid) VALUES (?,?,?)',
         [user.displayName, user.email, user.uid]
-    );
+    ).then( (r) => {
+        return res.json(r.results.insertId);
+    } );;
 
     return res.json( user );
 
@@ -315,7 +319,9 @@ routes.post( '/faculty', async ( req, res ) => {
     await db.query(
         'INSERT INTO faculty (email, firstName, lastName, campusId) VALUES (?,?,?,?)',
         [faculty.email, faculty.firstName, faculty.lastName, faculty.campusId]
-    );
+    ).then( (r) => {
+        return res.json(r.results.insertId);
+    } );;
 
     return res.json( faculty );
 
@@ -368,6 +374,116 @@ routes.delete( '/faculty/:id', async ( req, res ) => {
 } );
 
 /** END FACULTY API ENDPOINTS */
+
+/** INSTRUCTIONAL DESIGNER API ENDPOINTS */
+
+// list all instructional designers
+routes.get( '/instructional-designers', async ( req, res ) => {
+
+    const { results } = await db.query(
+        'SELECT * FROM instructionalDesigner ORDER BY firstName, lastName ASC'
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
+// list one specific instrucitonal designer
+routes.get( '/instructional-designers/:id', async ( req, res ) => {
+
+    const id = req.params.id;
+    const { results } = await db.query(
+        'SELECT * FROM instructionalDesigner WHERE id=?',
+        [id]
+    );
+
+    if ( results.length ) {
+        return res.json( results[0] );
+    }
+
+    return res.status(404).json( {message: `Instructional designer id ${id} does not exist.`} );
+
+} );
+
+// create new instructional desiger
+routes.post( '/instructional-designers', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const instructionalDesigner = req.body;
+
+    if ( instructionalDesigner.length == 0 ) {
+        return res.status(400).json( {message: "Failed to create new instructional designer."} );
+    }
+
+    if ( await exists( 'instructionalDesigner', 'email', instructionalDesigner.email ) ) {
+        return res.status(400).json( {message: "Cannot add instructional designer. Instructional designer already exists."} );
+    }
+
+    await db.query(
+        'INSERT INTO instructionalDesigner (email, firstName, lastName) VALUES (?,?,?)',
+        [instructionalDesigner.email, instructionalDesigner.firstName, instructionalDesigner.lastName]
+    ).then( (r) => {
+        return res.json(r.results.insertId);
+    } );
+
+    return res.json( instructionalDesigner );
+
+} );
+
+// update instructional desinger
+routes.post( '/instructional-designers/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+    const instructionalDesigner = req.body;
+
+    if ( instructionalDesigner.length == 0 ) {
+        return res.status(400).json( {message: "Failed to update instructional designer."} ); 
+    }
+
+    await db.query(
+        'UPDATE instructionalDesigner SET email=?, firstName=?, lastName=? WHERE id=?',
+        [instructionalDesigner.email, instructionalDesigner.firstName, instructionalDesigner.lastName, id]
+    );
+
+    const { results } = await db.query(
+        'SELECT * FROM instructionalDesigner WHERE id=?',
+        [id]
+    );
+
+    return res.json( results[0] );
+
+} );
+
+// delete instructional designer
+routes.delete( '/instructional-designers/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+
+    await db.query(
+        'DELETE FROM instructionalDesigner WHERE id=?',
+        [id]
+    );
+
+    return res.json({ message: 'Delete success' });
+
+} );
+
+/** END INSTRUCTIONAL DESIGNER API ENDPOINTS */
 
 /** HELPER FUNCTIONS */
 
