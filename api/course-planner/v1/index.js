@@ -485,6 +485,116 @@ routes.delete( '/instructional-designers/:id', async ( req, res ) => {
 
 /** END INSTRUCTIONAL DESIGNER API ENDPOINTS */
 
+/** MEDIA LEAD API ENDPOINTS */
+
+// list all media leads
+routes.get( '/media-leads', async ( req, res ) => {
+
+    const { results } = await db.query(
+        'SELECT * FROM mediaLead ORDER BY firstName, lastName ASC'
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
+// list one specific media lead
+routes.get( '/media-leads/:id', async ( req, res ) => {
+
+    const id = req.params.id;
+    const { results } = await db.query(
+        'SELECT * FROM mediaLead WHERE id=?',
+        [id]
+    );
+
+    if ( results.length ) {
+        return res.json( results[0] );
+    }
+
+    return res.status(404).json( {message: `Media Lead id ${id} does not exist.`} );
+
+} );
+
+// create new media lead
+routes.post( '/media-leads', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ADMIN ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const mediaLead = req.body;
+
+    if ( mediaLead.length == 0 ) {
+        return res.status(400).json( {message: "Failed to create new media lead."} );
+    }
+
+    if ( await exists( 'mediaLead', 'email', mediaLead.email ) ) {
+        return res.status(400).json( {message: "Cannot add media Lead. Media Lead already exists."} );
+    }
+
+    await db.query(
+        'INSERT INTO mediaLead (email, firstName, lastName) VALUES (?,?,?)',
+        [mediaLead.email, mediaLead.firstName, mediaLead.lastName]
+    ).then( (r) => {
+        return res.json(r.results.insertId);
+    } );
+
+    return res.json( mediaLead );
+
+} );
+
+// update media lead
+routes.post( '/media-leads/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ADMIN ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+    const mediaLead = req.body;
+
+    if ( mediaLead.length == 0 ) {
+        return res.status(400).json( {message: "Failed to update Media Lead."} ); 
+    }
+
+    await db.query(
+        'UPDATE mediaLead SET email=?, firstName=?, lastName=? WHERE id=?',
+        [mediaLead.email, mediaLead.firstName, mediaLead.lastName, id]
+    );
+
+    const { results } = await db.query(
+        'SELECT * FROM mediaLead WHERE id=?',
+        [id]
+    );
+
+    return res.json( results[0] );
+
+} );
+
+// delete media lead
+routes.delete( '/media-leads/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ADMIN ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+
+    await db.query(
+        'DELETE FROM mediaLead WHERE id=?',
+        [id]
+    );
+
+    return res.json({ message: 'Delete success' });
+
+} );
+
+/** END MEDIA LEAD API ENDPOINTS */
+
 /** HELPER FUNCTIONS */
 
 async function exists( table, indentifier, value ) {
