@@ -169,9 +169,9 @@ routes.get( '/users/:id', async ( req, res ) => {
 // create new user
 routes.post( '/users', async ( req, res ) => {
 
-    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ALL ) ) {
-        return res.status(401).json( {message: `401 Unauthorized`} );
-    }
+    // if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ALL ) ) {
+    //     return res.status(401).json( {message: `401 Unauthorized`} );
+    // }
 
     const user = req.body;
 
