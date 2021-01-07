@@ -595,6 +595,280 @@ routes.delete( '/media-leads/:id', async ( req, res ) => {
 
 /** END MEDIA LEAD API ENDPOINTS */
 
+/** PROGRAMS API ENDPOINTS */
+
+// list all programs
+routes.get( '/programs', async ( req, res ) => {
+
+    const { results } = await db.query(
+        'SELECT * FROM program ORDER BY name ASC'
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
+// list one specific program by code
+routes.get( '/programs/:code', async ( req, res ) => {
+
+    const code = req.params.code;
+    const { results } = await db.query(
+        'SELECT * FROM program WHERE code=?',
+        [code]
+    );
+
+    if ( results.length ) {
+        return res.json( results[0] );
+    }
+
+    return res.status(404).json( {message: `Program code ${code} does not exist.`} );
+
+} );
+
+// create new program
+routes.post( '/programs', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const program = req.body;
+
+    if ( program.length == 0 ) {
+        return res.status(400).json( {message: "Failed to create new program."} );
+    }
+
+    if ( await exists( 'program', 'code', program.code ) ) {
+        return res.status(400).json( {message: "Cannot add program. Program already exists."} );
+    }
+
+    await db.query(
+        'INSERT INTO program (code, name) VALUES (?,?)',
+        [program.code, program.name]
+    ).then( (r) => {
+        return res.json(r.results.insertId);
+    } );;
+
+    return res.json( faculty );
+
+} );
+
+// update program
+routes.post( '/programs/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+    const program = req.body;
+
+    if ( program.length == 0 ) {
+        return res.status(400).json( {message: "Failed to update program."} ); 
+    }
+
+    await db.query(
+        'UPDATE program SET code=?, name=? WHERE id=?',
+        [program.code, program.name, id]
+    );
+
+    const { results } = await db.query(
+        'SELECT * FROM program WHERE id=?',
+        [id]
+    );
+
+    return res.json( results[0] );
+
+} );
+
+// delete program
+routes.delete( '/programs/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+
+    await db.query(
+        'DELETE FROM program WHERE id=?',
+        [id]
+    );
+
+    return res.json({ message: 'Delete success' });
+
+} );
+
+/** END PROGRAMS API ENDPOINTS */
+
+/** COURSES API ENDPOINTS */
+
+// list all courses
+routes.get( '/courses', async ( req, res ) => {
+
+    const { results } = await db.query(
+        'SELECT * FROM course ORDER BY name ASC'
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
+// list all courses by program code
+routes.get( '/courses/:code', async ( req, res ) => {
+
+    const code = req.params.code;
+    const { results } = await db.query(
+        'SELECT * FROM course WHERE programCode=?',
+        [code]
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
+// create new course
+routes.post( '/courses', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const course = req.body;
+
+    if ( course.length == 0 ) {
+        return res.status(400).json( {message: "Failed to create new course."} );
+    }
+
+    if ( await exists( 'course', 'code', course.code ) ) {
+        return res.status(400).json( {message: "Cannot add course. Course already exists."} );
+    }
+
+    await db.query(
+        'INSERT INTO course (code, name, programCode) VALUES (?,?,?)',
+        [course.code, course.name, course.programCode]
+    ).then( (r) => {
+        return res.json(r.results.insertId);
+    } );;
+
+    return res.json( faculty );
+
+} );
+
+// update course
+routes.post( '/courses/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+    const course = req.body;
+
+    if ( course.length == 0 ) {
+        return res.status(400).json( {message: "Failed to update course."} ); 
+    }
+
+    await db.query(
+        'UPDATE course SET code=?, name=? WHERE id=?',
+        [course.code, course.name, id]
+    );
+
+    const { results } = await db.query(
+        'SELECT * FROM course WHERE id=?',
+        [id]
+    );
+
+    return res.json( results[0] );
+
+} );
+
+// delete course
+routes.delete( '/courses/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+
+    await db.query(
+        'DELETE FROM course WHERE id=?',
+        [id]
+    );
+
+    return res.json({ message: 'Delete success' });
+
+} );
+
+/** END COURSES API ENDPOINTS */
+
+/** PROGRAM MANAGER API ENDPOINTS */
+
+// list all program managers
+routes.get( '/program-managers', async ( req, res ) => {
+
+    const { results } = await db.query(
+        `SELECT programManager.id, user.displayName, user.email, programManager.programCode
+        FROM programManager
+        INNER JOIN user ON user.email = programManager.email
+        WHERE user.roleId = 3
+        ORDER BY user.displayName ASC`
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
+// update program manager
+routes.post( '/program-managers/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.SUPPORT_ADMIN ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+    const pm = req.body;
+
+    if ( pm.length == 0 ) {
+        return res.status(400).json( {message: "Failed to update Program Manager."} ); 
+    }
+
+    await db.query(
+        'UPDATE programManager SET programCode=? WHERE id=?',
+        [pm.programCode, id]
+    );
+
+    const { results } = await db.query(
+        `SELECT programManager.id, user.displayName, user.email, programManager.programCode
+        FROM programManager
+        INNER JOIN user ON user.email = ?
+        WHERE programManager.id = ?`,
+        [pm.email, id]
+    );
+
+    return res.json( results[0] );
+
+} );
+
+/** END PROGRAM MANAGER API ENDPOINTS */
+
 /** HELPER FUNCTIONS */
 
 async function exists( table, indentifier, value ) {
