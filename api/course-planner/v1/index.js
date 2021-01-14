@@ -169,10 +169,6 @@ routes.get( '/users/:id', async ( req, res ) => {
 // create new user
 routes.post( '/users', async ( req, res ) => {
 
-    // if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.ALL ) ) {
-    //     return res.status(401).json( {message: `401 Unauthorized`} );
-    // }
-
     const user = req.body;
 
     if ( user.length < 0 ) {
@@ -868,6 +864,74 @@ routes.post( '/program-managers/:id', async ( req, res ) => {
 } );
 
 /** END PROGRAM MANAGER API ENDPOINTS */
+
+/** COURSE MATRIX API ENDPOINTS */
+
+// list all course matrix items based on program code
+routes.get( '/course-matrix/:programCode', async ( req, res ) => {
+
+    const programCode = req.params.programCode;
+
+    const { results } = await db.query(
+        `SELECT * FROM courseMatrix
+         WHERE programCode = ?`,
+        [programCode]
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
+// list all specific course matrix items in a program
+// after certain fiscal year
+routes.get( '/course-matrix/:programCode/:year', async ( req, res ) => {
+
+    const programCode = req.params.programCode;
+    const year = req.params.year;
+
+    const { results } = await db.query(
+        `SELECT * FROM courseMatrix
+         WHERE programCode = ?
+          AND fiscalYear = ?`,
+        [programCode, year]
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
+// list specific course matrix item based on program and fiscal year
+routes.get( '/course-matrix/:programCode/:courseCode/:year', async ( req, res ) => {
+
+    const programCode = req.params.programCode;
+    const courseCode = req.params.courseCode;
+    const year = req.params.year;
+
+    const { results } = await db.query(
+        `SELECT * FROM courseMatrix
+         WHERE programCode = ?
+          AND courseCode = ?
+          AND fiscalYear = ?`,
+        [programCode, courseCode, year]
+    );
+
+    if ( results.length ) {
+        return res.json( results[0] );
+    }
+
+    return res.json( [] );
+
+} );
+
+/** END COURSE MATRIX API ENDPOINTS */
 
 /** HELPER FUNCTIONS */
 
