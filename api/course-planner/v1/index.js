@@ -955,6 +955,35 @@ routes.post( '/course-matrix', async ( req, res ) => {
 
 } );
 
+// update course matrix entry's live value
+routes.post( '/course-matrix/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+    const entry = req.body;
+    const datetime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    if ( entry.length == 0 ) {
+        return res.status(400).json( {message: "Failed to update course matrix entry."} );
+    }
+
+    await db.query(
+        'UPDATE courseMatrix SET facultyId=?, campusId=?, designerId=?, mediaLeadId=?, updatedOn=? WHERE id=?',
+        [entry.facultyId, entry.campusId, entry.designerId, entry.mediaLeadId, datetime, id]
+    );
+
+    const { results } = await db.query(
+        'SELECT * FROM courseMatrix WHERE id=?',
+        [id]
+    );
+
+    return res.json( results[0] );
+
+} );
+
 // update course matrix entry's status value
 routes.post( '/course-matrix/status/:id', async ( req, res ) => {
 
