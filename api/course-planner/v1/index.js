@@ -1013,6 +1013,24 @@ routes.post( '/course-matrix/live/:id', async ( req, res ) => {
 
 } );
 
+// delete course matrix item
+routes.delete( '/course-matrix/:id', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const id = req.params.id;
+
+    await db.query(
+        'DELETE FROM courseMatrix WHERE id=?',
+        [id]
+    );
+
+    return res.json({ message: 'Delete success' });
+
+} );
+
 /** END COURSE MATRIX API ENDPOINTS */
 
 /** HELPER FUNCTIONS */
