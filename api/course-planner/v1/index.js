@@ -832,6 +832,34 @@ routes.get( '/program-managers', async ( req, res ) => {
 
 } );
 
+// create new program manager
+routes.post( '/program-managers', async ( req, res ) => {
+
+    if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.SUPPORT_ADMIN ) ) {
+        return res.status(401).json( {message: `401 Unauthorized`} );
+    }
+
+    const pmEmail = req.body.email;
+
+    if ( pmEmail.length == 0 ) {
+        return res.status(400).json( {message: "Failed to create add program manager."} );
+    }
+
+    if ( await exists( 'programManager', 'email', pmEmail ) ) {
+        return res.status(400).json( {message: "Cannot add program manager. Program manager already exists."} );
+    }
+
+    await db.query(
+        'INSERT INTO programManager (email) VALUES (?)',
+        [pmEmail]
+    ).then( (r) => {
+        return res.json(r.results.insertId);
+    } );;
+
+    return res.json( [] );
+
+} );
+
 // update program manager
 routes.post( '/program-managers/:id', async ( req, res ) => {
 
