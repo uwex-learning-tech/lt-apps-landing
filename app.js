@@ -15,6 +15,7 @@ const allowedScripts = [
     "https://www.googleapis.com",
     "https://course-planner-22915.firebaseapp.com",
     "https://lh3.googleusercontent.com",
+    "https://lh6.googleusercontent.com",
     "https://accounts.google.com",
     "https://oauth2.googleapis.com",
     "https://securetoken.googleapis.com",
