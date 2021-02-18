@@ -899,12 +899,35 @@ routes.post( '/program-managers/:id', async ( req, res ) => {
 routes.get( '/course-matrix/:programCode', async ( req, res ) => {
 
     const programCode = req.params.programCode;
+    let queryStr = '';
+    let values = [programCode];
 
-    const { results } = await db.query(
-        `SELECT * FROM courseMatrix
-         WHERE programCode = ?`,
-        [programCode]
-    );
+    if ( req.query.fy ) {
+
+        const fys = req.query.fy;
+        let fyPlaceholder = '';
+
+        values = values.concat(fys);
+
+        for (let i = 0; i < req.query.fy.length; i++ ) {
+            fyPlaceholder += '?';
+            if ( i < req.query.fy.length - 1 ) {
+                fyPlaceholder += ', ';
+            }
+        }
+
+        queryStr = `SELECT * FROM courseMatrix
+        WHERE programCode = ?
+        AND fiscalYear IN (${fyPlaceholder.toString()});`;
+
+    } else {
+
+        queryStr = `SELECT * FROM courseMatrix
+        WHERE programCode = ?`;
+
+    }
+
+    const { results } = await db.query( queryStr, values );
 
     if ( results.length ) {
         return res.json( results );
@@ -916,25 +939,25 @@ routes.get( '/course-matrix/:programCode', async ( req, res ) => {
 
 // list all specific course matrix items in a program
 // after certain fiscal year
-routes.get( '/course-matrix/:programCode/:year', async ( req, res ) => {
+// routes.get( '/course-matrix/:programCode/:year', async ( req, res ) => {
 
-    const programCode = req.params.programCode;
-    const year = req.params.year;
+//     const programCode = req.params.programCode;
+//     const year = req.params.year;
 
-    const { results } = await db.query(
-        `SELECT * FROM courseMatrix
-         WHERE programCode = ?
-          AND fiscalYear = ?`,
-        [programCode, year]
-    );
+//     const { results } = await db.query(
+//         `SELECT * FROM courseMatrix
+//          WHERE programCode = ?
+//           AND fiscalYear = ?`,
+//         [programCode, year]
+//     );
 
-    if ( results.length ) {
-        return res.json( results );
-    }
+//     if ( results.length ) {
+//         return res.json( results );
+//     }
 
-    return res.json( [] );
+//     return res.json( [] );
 
-} );
+// } );
 
 // list specific course matrix item based on program and fiscal year
 routes.get( '/course-matrix/:programCode/:courseCode/:year', async ( req, res ) => {
