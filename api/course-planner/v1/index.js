@@ -597,7 +597,7 @@ routes.delete( '/media-leads/:id', async ( req, res ) => {
 routes.get( '/programs', async ( req, res ) => {
 
     const { results } = await db.query(
-        'SELECT * FROM program ORDER BY name ASC'
+        'SELECT * FROM program ORDER BY code ASC'
     );
 
     if ( results.length ) {
@@ -707,7 +707,7 @@ routes.delete( '/programs/:id', async ( req, res ) => {
 routes.get( '/courses', async ( req, res ) => {
 
     const { results } = await db.query(
-        'SELECT * FROM course ORDER BY name ASC'
+        'SELECT * FROM course ORDER BY code ASC'
     );
 
     if ( results.length ) {
@@ -723,7 +723,7 @@ routes.get( '/courses/:code', async ( req, res ) => {
 
     const code = req.params.code;
     const { results } = await db.query(
-        'SELECT * FROM course WHERE programCode=?',
+        'SELECT * FROM course WHERE programCode=? ORDER BY code ASC',
         [code]
     );
 
