@@ -73,7 +73,8 @@ app.use( '/api/course-planner/v1', coursePlannerApiV1 );
 // ROUTE: ROOT
 app.get( '/', ( req, res ) => {
     const host = req.protocol + '://' + req.headers.host;
-    res.render( 'index.ejs', { title: 'Learning Technology Apps | UWEX', root: host } );
+    const currentYear = new Date().getFullYear();
+    res.render( 'index.ejs', { title: 'Learning Technology Apps | UWEX', root: host, year: currentYear } );
 });
 
 // ROUTE REWRITE FOR COURSE PLANNER ANGULAR APP
