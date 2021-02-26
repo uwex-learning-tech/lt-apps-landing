@@ -723,7 +723,7 @@ routes.get( '/courses/:code', async ( req, res ) => {
 
     const code = req.params.code;
     const { results } = await db.query(
-        'SELECT * FROM course WHERE programCode=? ORDER BY code ASC',
+        'SELECT * FROM course WHERE programId = (SELECT program.id FROM program WHERE program.code = ?) ORDER BY code ASC',
         [code]
     );
 
@@ -753,8 +753,8 @@ routes.post( '/courses', async ( req, res ) => {
     }
 
     await db.query(
-        'INSERT INTO course (code, name, programCode) VALUES (?,?,?)',
-        [course.code, course.name, course.programCode]
+        'INSERT INTO course (code, name, programId) VALUES (?,?,?)',
+        [course.code, course.name, course.programId]
     ).then( (r) => {
         return res.json(r.results.insertId);
     } );;
@@ -917,13 +917,13 @@ routes.get( '/course-matrix/:programCode', async ( req, res ) => {
         }
 
         queryStr = `SELECT * FROM courseMatrix
-        WHERE programCode = ?
+        WHERE programId = (SELECT program.id FROM program WHERE program.code = ?)
         AND fiscalYear IN (${fyPlaceholder.toString()});`;
 
     } else {
 
         queryStr = `SELECT * FROM courseMatrix
-        WHERE programCode = ?`;
+        WHERE programId = SELECT program.id FROM program WHERE program.code = ?`;
 
     }
 
@@ -937,28 +937,6 @@ routes.get( '/course-matrix/:programCode', async ( req, res ) => {
 
 } );
 
-// list all specific course matrix items in a program
-// after certain fiscal year
-// routes.get( '/course-matrix/:programCode/:year', async ( req, res ) => {
-
-//     const programCode = req.params.programCode;
-//     const year = req.params.year;
-
-//     const { results } = await db.query(
-//         `SELECT * FROM courseMatrix
-//          WHERE programCode = ?
-//           AND fiscalYear = ?`,
-//         [programCode, year]
-//     );
-
-//     if ( results.length ) {
-//         return res.json( results );
-//     }
-
-//     return res.json( [] );
-
-// } );
-
 // list specific course matrix item based on program and fiscal year
 routes.get( '/course-matrix/:programCode/:courseCode/:year', async ( req, res ) => {
 
@@ -968,8 +946,8 @@ routes.get( '/course-matrix/:programCode/:courseCode/:year', async ( req, res ) 
 
     const { results } = await db.query(
         `SELECT * FROM courseMatrix
-         WHERE programCode = ?
-          AND courseCode = ?
+         WHERE programId = (SELECT program.id FROM program WHERE program.code = ?)
+          AND courseId = (SELECT course.id FROM course WHERE course.code = ?)
           AND fiscalYear = ?`,
         [programCode, courseCode, year]
     );
@@ -996,8 +974,8 @@ routes.post( '/course-matrix', async ( req, res ) => {
     }
 
     await db.query(
-        'INSERT INTO courseMatrix (programCode, courseCode, status, start, live, fiscalYear, increment) VALUES (?,?,?,?,?,?,?)',
-        [entry.programCode, entry.courseCode, entry.status, entry.start, entry.live, entry.fiscalYear, entry.increment]
+        'INSERT INTO courseMatrix (programId, courseId, status, start, live, fiscalYear, increment) VALUES (?,?,?,?,?,?,?)',
+        [entry.programId, entry.courseId, entry.status, entry.start, entry.live, entry.fiscalYear, entry.increment]
     ).then( (r) => {
         return res.json(r.results.insertId);
     } );;
