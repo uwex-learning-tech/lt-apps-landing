@@ -53,7 +53,7 @@ app.use( helmet.contentSecurityPolicy( {
             ...helmet.contentSecurityPolicy.getDefaultDirectives(),
             "default-src": allowedScripts,
             "script-src": allowedScripts,
-            "img-src": allowedScripts
+            "img-src": ["'self'", "data: https:"]
         }
     } )
 );
