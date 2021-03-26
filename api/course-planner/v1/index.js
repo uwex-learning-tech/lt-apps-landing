@@ -15,7 +15,7 @@ const ROLE = {
 routes.get( '/campuses', async ( req, res ) => {
 
     const { results } = await db.query(
-        'SELECT * FROM campus ORDER BY name ASC'
+        'SELECT * FROM campus ORDER BY code ASC'
     );
 
     if ( results.length ) {
@@ -55,14 +55,15 @@ routes.post( '/campuses', async ( req, res ) => {
     }
 
     const name = req.body.name;
+    const code = req.body.code;
 
     if ( await exists( 'campus', 'name', name ) ) {
         return res.status(400).json( {message: "Cannot add campus. Campus already exists."} );
     }
 
     await db.query(
-        'INSERT INTO campus (name) VALUES (?)',
-        [name]
+        'INSERT INTO campus (code, name) VALUES (?,?)',
+        [code, name]
     ).then( (r) => {
         return res.json(r.results.insertId);
     } );;
@@ -84,14 +85,15 @@ routes.post( '/campuses/:id', async ( req, res ) => {
 
     const id = req.params.id;
     const name = req.body.name;
+    const code = req.body.code;
 
     if ( await exists( 'campus', 'name', name ) ) {
         return res.status(400).json( {message: "Cannot update campus. Campus already exists."} );
     }
 
     await db.query(
-        'UPDATE campus SET name=? WHERE id=?',
-        [name, id]
+        'UPDATE campus SET code=?, name=? WHERE id=?',
+        [code, name, id]
     );
 
     const { results } = await db.query(
@@ -963,6 +965,44 @@ routes.get( '/course-matrix/:programCode/:courseCode/:year', async ( req, res ) 
 
 } );
 
+// list specific course matrix item based on range
+routes.get( '/course-matrix/range/from/:fromStr/to/:toStr', async ( req, res ) => {
+
+    const fromStr = req.params.fromStr;
+    const toStr = req.params.toStr;
+
+    const { results } = await db.query(
+        'SELECT * FROM courseMatrix WHERE start >= ? AND start <= ? ORDER BY start ASC;',
+        [fromStr, toStr]
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
+// list specific course matrix item based on campus and ficsal year
+routes.get( '/course-matrix/campus/:campusId/fiscalYear/:fiscalYear', async ( req, res ) => {
+
+    const campusId = req.params.campusId;
+    const fiscalYear = req.params.fiscalYear;
+
+    const { results } = await db.query(
+        'SELECT * FROM courseMatrix WHERE campusId = ? AND fiscalYear = ? ORDER BY start ASC;',
+        [campusId, fiscalYear]
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
 // create a new course matrix entry
 routes.post( '/course-matrix', async ( req, res ) => {
 
@@ -1093,6 +1133,30 @@ routes.delete( '/course-matrix/:id', async ( req, res ) => {
 } );
 
 /** END COURSE MATRIX API ENDPOINTS */
+
+/** DEV PERIOD API ENDPOINTS */
+
+// list specific course matrix item based on program and fiscal year
+routes.get( '/dev-period/range', async ( req, res ) => {
+
+    const start = await db.query(
+        `SELECT start FROM courseMatrix ORDER BY start ASC LIMIT 1;`
+    );
+
+    const end = await db.query(
+        `SELECT start FROM courseMatrix ORDER BY start DESC LIMIT 1;`
+    );
+
+    const range = {
+        from: start.results[0].start,
+        to: end.results[0].start
+    }
+
+    return res.json( range );
+
+} );
+
+/** END DEV PERIOD API ENDPOINTS */
 
 /** HELPER FUNCTIONS */
 
