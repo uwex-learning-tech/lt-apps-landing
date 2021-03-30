@@ -942,6 +942,25 @@ routes.get( '/course-matrix/:programCode', async ( req, res ) => {
 
 } );
 
+routes.get( '/course-matrix/range/all', async ( req, res ) => {
+
+    const start = await db.query(
+        `SELECT start FROM courseMatrix ORDER BY start ASC LIMIT 1;`
+    );
+
+    const end = await db.query(
+        `SELECT start FROM courseMatrix ORDER BY start DESC LIMIT 1;`
+    );
+
+    const range = {
+        from: start.results[0].start,
+        to: end.results[0].start
+    }
+
+    return res.json( range );
+
+} );
+
 // list specific course matrix item based on program and fiscal year
 routes.get( '/course-matrix/:programCode/:courseCode/:year', async ( req, res ) => {
 
@@ -993,6 +1012,29 @@ routes.get( '/course-matrix/campus/:campusId/fiscalYear/:fiscalYear', async ( re
     const { results } = await db.query(
         'SELECT * FROM courseMatrix WHERE campusId = ? AND fiscalYear = ? ORDER BY start ASC;',
         [campusId, fiscalYear]
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
+// list specific course matrix item based on program and ficsal year
+routes.get( '/course-matrix/program/:programId/from/:from/to/:to', async ( req, res ) => {
+
+    const programId = req.params.programId;
+    let from = req.params.from;
+    let to = req.params.to;
+
+    from = from + '-' + (Number(from) + 1) + ':0';
+    to = to + '-' + (Number(to) + 1) + ':2';
+
+    const { results } = await db.query(
+        'SELECT * FROM courseMatrix WHERE programId = ? AND start >= ? AND start <= ? ORDER BY start ASC;',
+        [programId, from, to]
     );
 
     if ( results.length ) {
@@ -1133,30 +1175,6 @@ routes.delete( '/course-matrix/:id', async ( req, res ) => {
 } );
 
 /** END COURSE MATRIX API ENDPOINTS */
-
-/** DEV PERIOD API ENDPOINTS */
-
-// list specific course matrix item based on program and fiscal year
-routes.get( '/dev-period/range', async ( req, res ) => {
-
-    const start = await db.query(
-        `SELECT start FROM courseMatrix ORDER BY start ASC LIMIT 1;`
-    );
-
-    const end = await db.query(
-        `SELECT start FROM courseMatrix ORDER BY start DESC LIMIT 1;`
-    );
-
-    const range = {
-        from: start.results[0].start,
-        to: end.results[0].start
-    }
-
-    return res.json( range );
-
-} );
-
-/** END DEV PERIOD API ENDPOINTS */
 
 /** HELPER FUNCTIONS */
 
