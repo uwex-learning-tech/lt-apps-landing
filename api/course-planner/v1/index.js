@@ -1045,6 +1045,37 @@ routes.get( '/course-matrix/program/:programId/from/:from/to/:to', async ( req, 
 
 } );
 
+// list specific course matrix item based on collaborator and ficsal year
+routes.get( '/course-matrix/collaborator/:collaborator/person/:personId/from/:from/to/:to', async ( req, res ) => {
+
+    const personId = req.params.personId;
+    const collaborator = req.params.collaborator;
+    let from = req.params.from;
+    let to = req.params.to;
+    let collaGroup;
+
+    from = from + '-' + (Number(from) + 1) + ':0';
+    to = to + '-' + (Number(to) + 1) + ':2';
+
+    if ( collaborator == 'mediaLead' ) {
+        collaGroup = 'mediaLeadId';
+    } else if ( collaborator == 'instructionalDesigner' ) {
+        collaGroup = 'designerId';
+    }
+
+    const { results } = await db.query(
+        `SELECT * FROM courseMatrix WHERE ${collaGroup} =? AND start >= ? AND start <= ? ORDER BY start ASC;`,
+        [personId, from, to]
+    );
+
+    if ( results.length ) {
+        return res.json( results );
+    }
+
+    return res.json( [] );
+
+} );
+
 // create a new course matrix entry
 routes.post( '/course-matrix', async ( req, res ) => {
 
