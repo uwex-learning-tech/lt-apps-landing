@@ -1100,7 +1100,7 @@ routes.post( '/course-matrix', async ( req, res ) => {
 
 } );
 
-// update course matrix entry's live value
+// update course matrix entry's value
 routes.post( '/course-matrix/:id', async ( req, res ) => {
 
     if ( !req.headers.authtoken || ! await roleAllowed( req.headers.authtoken, ROLE.PROGRAM_MANAGER ) ) {
@@ -1116,8 +1116,8 @@ routes.post( '/course-matrix/:id', async ( req, res ) => {
     }
 
     await db.query(
-        'UPDATE courseMatrix SET facultyId=?, campusId=?, designerId=?, mediaLeadId=?, updatedOn=? WHERE id=?',
-        [entry.facultyId, entry.campusId, entry.designerId, entry.mediaLeadId, datetime, id]
+        'UPDATE courseMatrix SET facultyId=?, campusId=?, designerId=?, mediaLeadId=?, start=?, live=?, fiscalYear=?, increment=?, updatedOn=? WHERE id=?',
+        [entry.facultyId, entry.campusId, entry.designerId, entry.mediaLeadId, entry.start, entry.live, entry.fiscalYear, entry.increment, datetime, id]
     );
 
     const { results } = await db.query(
