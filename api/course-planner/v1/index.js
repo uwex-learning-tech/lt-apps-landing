@@ -819,10 +819,9 @@ routes.delete( '/courses/:id', async ( req, res ) => {
 routes.get( '/program-managers', async ( req, res ) => {
 
     const { results } = await db.query(
-        `SELECT programManager.id, user.displayName, user.email, programManager.programId, program.code AS programCode
+        `SELECT programManager.id, user.displayName, user.email, programManager.programIds
         FROM programManager
         INNER JOIN user ON user.email = programManager.email
-        LEFT JOIN program ON program.id LIKE programManager.programId
         WHERE user.roleId = 3
         ORDER BY user.displayName ASC`
     );
@@ -878,21 +877,11 @@ routes.post( '/program-managers/:id', async ( req, res ) => {
     }
 
     await db.query(
-        'UPDATE programManager SET programId=? WHERE id=?',
-        [pm.programId, id]
+        'UPDATE programManager SET programIds=? WHERE id=?',
+        [pm.programIds, id]
     );
 
-    const { results } = await db.query(
-        `SELECT programManager.id, user.displayName, user.email, programManager.programId, program.code AS programCode
-        FROM programManager
-        INNER JOIN user ON user.email = programManager.email
-        LEFT JOIN program ON program.id LIKE programManager.programId
-        WHERE user.roleId = 3 AND programManager.id = ?
-        ORDER BY user.displayName ASC`,
-        [id]
-    );
-
-    return res.json( results[0] );
+    return res.json( pm );
 
 } );
 
