@@ -19,7 +19,8 @@ const allowedScripts = [
     "https://accounts.google.com",
     "https://oauth2.googleapis.com",
     "https://securetoken.googleapis.com",
-    "https://fonts.googleapis.com"
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com"
 ];
 
 // EXPRESS APP constants
@@ -51,7 +52,7 @@ app.use( compression() );
 app.use( helmet.contentSecurityPolicy( {
         directives: {
             ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-            "default-src": allowedScripts,
+            "default-src": ["'self'", "data: https:"],
             "script-src": allowedScripts,
             "img-src": ["'self'", "data: https:"]
         }
