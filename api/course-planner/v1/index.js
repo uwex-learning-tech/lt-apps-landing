@@ -1018,8 +1018,8 @@ routes.get( '/course-matrix/program/:programId/from/:from/to/:to', async ( req, 
     let from = req.params.from;
     let to = req.params.to;
 
-    from = from + '-' + (Number(from) + 1) + ':0';
-    to = to + '-' + (Number(to) + 1) + ':2';
+    from = from + ':0';
+    to = to + ':2';
 
     const { results } = await db.query(
         'SELECT * FROM courseMatrix WHERE programId = ? AND start >= ? AND start <= ? ORDER BY start ASC;',
