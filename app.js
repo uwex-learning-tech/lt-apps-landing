@@ -8,21 +8,6 @@ const courseMatrixDb = require( './api/course-planner/v1/database' );
 const firebaseAdmin = require( 'firebase-admin' );
 const coursePlannerCredentials = require( './course-planner-credential.json' );
 
-// constant
-const allowedScripts = [
-    "'self'",
-    "https://apis.google.com",
-    "https://www.googleapis.com",
-    "https://course-planner-22915.firebaseapp.com",
-    "https://lh3.googleusercontent.com",
-    "https://lh6.googleusercontent.com",
-    "https://accounts.google.com",
-    "https://oauth2.googleapis.com",
-    "https://securetoken.googleapis.com",
-    "https://fonts.googleapis.com",
-    "https://fonts.gstatic.com"
-];
-
 // EXPRESS APP constants
 const app = express();
 const port = process.env.PORT || 3000;
@@ -49,14 +34,17 @@ app.use( compression() );
 
 // use a middleware to secure and set HTTP headers
 // app.use( helmet() );
-app.use( helmet.contentSecurityPolicy( {
+app.use(
+    
+    helmet.contentSecurityPolicy( {
+        useDefaults: true,
         directives: {
-            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
             "default-src": ["'self'", "data: https:"],
-            "script-src": allowedScripts,
-            "img-src": ["'self'", "data: https:"]
+            "script-src":  ["'self'", "https:"],
+            "img-src":     ["'self'", "data: https:"]
         }
     } )
+    
 );
 
 // use the "public" directory to serve pulbic static files
