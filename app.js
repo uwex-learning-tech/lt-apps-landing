@@ -41,7 +41,8 @@ app.use(
         directives: {
             "default-src": ["'self'", "data: https:"],
             "script-src":  ["'self'", "https:"],
-            "img-src":     ["'self'", "data: https:"]
+            "img-src":     ["'self'", "data: https:"],
+            "style-src":   ["'self'", "'unsafe-inline' https:"]
         }
     } )
     
