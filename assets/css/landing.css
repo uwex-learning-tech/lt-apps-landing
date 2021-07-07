@@ -32,32 +32,32 @@ nav {
     background-color: #1C2938;
 }
 
-nav .brand {
-    display: flex;
-    align-items: center;
-}
-
-nav .brand .logo {
-    margin-right: 20px;
-}
-
 nav .primary-nav {
     display: flex;
     width: 100%;
     height: 100%;
-    flex-flow: row nowrap;
+    flex-flow: column;
     align-items: center;
+    justify-content: center;
 }
 
 nav .primary-nav .brand {
-    flex: 1 0 auto;
+    display: flex;
+    flex-flow: column;
+    text-align: center;
     font-weight: bold;
 }
 
+nav .primary-nav .brand .logo {
+    display: block;
+    margin-bottom: 5px;
+}
+
 nav .primary-nav ul {
-    display: flex;
+    display: none;
+    flex: 1 0 auto;
     list-style: none;
-    align-self: flexend;
+    justify-content: flex-end;
     padding: 0;
     margin: 0;
 }
@@ -78,18 +78,66 @@ nav .primary-nav ul li a:hover {
     background-color: #253649;
 }
 
+@media only screen and (min-width : 812px) {
+
+    nav .primary-nav {
+        flex-flow: row nowrap;
+        justify-content: flex-start;
+    }
+
+    nav .primary-nav .brand {
+        flex-flow: row nowrap;
+        align-items: center;
+    }
+
+    nav .primary-nav .brand .logo {
+        margin-right: 20px;
+        margin-bottom: 0;
+    }
+
+    nav .primary-nav ul {
+        display: flex;
+        padding-left: 40px;
+    }
+
+}
+
 .content {
     flex: 1 0 auto;
 }
 
 .content .apps-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(1, 1fr);
     grid-auto-rows: 1fr;
     gap: 10px;
     align-items: stretch;
     align-content: stretch;
     margin: 20px 0;
+}
+
+@media only screen and (min-width : 667px) {
+
+    .content .apps-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media only screen and (min-width : 812px) {
+
+    .content .apps-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+}
+
+@media only screen and (min-width : 1224px) {
+
+    .content .apps-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
 }
 
 .content .apps-grid .app-item a {
